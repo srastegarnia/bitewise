@@ -17,3 +17,6 @@ env/
 
 # System
 .DS_Store
+
+# Virtual environments
+BiteWise_env/
