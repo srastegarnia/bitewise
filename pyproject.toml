@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitewise"
+version = "0.1.0"
+description = "Waste- and calorie-wise recipe suggester with vision + GenAI."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Shima Rastegarnia" }]
+dependencies = [
+    "ipython",
+    "ipywidgets>=8",
+    "pillow",
+    "google-generativeai",
+    "typing_extensions",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "pytest-cov", "black", "isort", "flake8", "pre-commit"]
+
+[project.scripts]
+bitewise = "bitewise.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
