@@ -27,3 +27,8 @@ htmlcov/
 
 # Project Virtual environments
 BiteWise_env/
+
+# Local virtual envs
+.venv*/
+# Personal scratch notebooks
+notebooks/copy_*.ipynb
