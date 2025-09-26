@@ -9,6 +9,8 @@ from .recipes import (
     suggest_recipes_from_ingredients,
 )
 
+from .vision import detect_ingredients as _detect_from_image
+
 # -------- helpers --------
 def _split_csv(s: str):
     return [x.strip() for x in s.split(",") if x.strip()]
@@ -16,50 +18,6 @@ def _split_csv(s: str):
 def _print_json(obj):
     print(json.dumps(obj, ensure_ascii=False, indent=2))
 
-def _detect_from_image(client, image_path: str, max_items: int = 20):
-    """
-    Use Gemini to detect edible grocery items in an image.
-    Returns a Python list[str].
-    """
-    import json as _json
-    from PIL import Image
-    from google.generativeai.types import GenerationConfig
-
-    prompt = (
-        "Identify edible grocery/food items visible in this photo. "
-        "Return ONLY a JSON array of strings (unique, capitalized common names). "
-        "No commentary."
-    )
-    img = Image.open(image_path)
-    resp = client.generate_content(
-        [img, {"text": prompt}],
-        generation_config=GenerationConfig(
-            response_mime_type="application/json",
-            temperature=0.2,
-        ),
-    )
-    try:
-        data = _json.loads(resp.text)
-    except Exception:
-        data = resp.text
-
-    if isinstance(data, dict) and "ingredients" in data:
-        items = data["ingredients"]
-    else:
-        items = data
-    if not isinstance(items, list):
-        items = []
-
-    # normalize + unique + clamp
-    items = [str(x).strip() for x in items if str(x).strip()]
-    seen, out = set(), []
-    for it in items:
-        if it not in seen:
-            seen.add(it)
-            out.append(it)
-        if len(out) >= max_items:
-            break
-    return out
 
 def _pick_from_list(items: list[str]) -> list[str]:
     """
@@ -146,7 +104,7 @@ def main() -> int:
         client = create_client()  # needs GOOGLE_API_KEY in env for online mode
 
     if args.cmd == "detect":
-        items = _detect_from_image(client, args.image, args.max_items)
+        items = _detect_from_image(args.image, client, args.max_items)
         _print_json(items)
         return 0
 
@@ -162,7 +120,7 @@ def main() -> int:
         return 0
 
     if args.cmd == "plan":
-        detected = _detect_from_image(client, args.image, args.max_items)
+        detected = _detect_from_image(args.image, client, args.max_items)
         if args.pick:
             detected = _pick_from_list(detected)
 
