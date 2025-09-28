@@ -3,6 +3,7 @@ requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
+license = { file = "LICENSE" } 
 name = "bitewise"
 version = "0.1.0"
 description = "Waste- and constraint-aware recipe suggester."
@@ -13,6 +14,10 @@ dependencies = [
   "google-generativeai>=0.7.2",
   "python-dotenv>=1.0.1",
   "pillow>=10.3.0"
+]
+
+classifiers = [
+  "License :: OSI Approved :: MIT License"
 ]
 
 [project.optional-dependencies]

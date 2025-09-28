@@ -5,6 +5,7 @@ Smart, waste-aware meal planning that respects **calories**, **diets**, **cuisin
 [![Demo Video](https://img.shields.io/badge/Watch-Demo-red)](https://youtube.com) 
 [![Kaggle Notebook](https://img.shields.io/badge/Open-Kaggle-blue)](https://www.kaggle.com/code/shimarastegar/bitewise)
 [![Blog Post](https://img.shields.io/badge/Read-Blog-green)](https://medium.com/@brastgrants/blitudes-revolutionizing-meal-planning-with-your-sl-kitchen-assistant-fa7672bb6ce9)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 <div align="center">
   <img src="docs/img/01_overview.png" alt="BiteWise overview" width="90%">
@@ -13,13 +14,13 @@ Smart, waste-aware meal planning that respects **calories**, **diets**, **cuisin
 ---
 
 ## 🚀 What it does
-- 📸 **Smart Ingredient Detection:** Upload a fridge/pantry photo(s), type ingredients, or select from a pantry list.
-- ⚖️ **Calorie-aware:** Suggestions within your selected limit (e.g., 200–1200 kcal).
-- 🌱 **Dietary Customization:** Keto, Vegan, Gluten-Free, Vegetarian, etc.
-- 🌍 **Global Cuisines:** Italian, Japanese, Mexican, Indian, and more.
-- ♻️ **Waste Reduction:** Prioritizes using what you already have.  
-- 🛠️ **Developer-friendly:** Returns clean JSON; guardrails enforce allowed ingredients only.
-- ✅ **Responsible outputs:** JSON-only model output, calorie bounds, explicit allow-lists
+- **Smart Ingredient Detection:** Upload a fridge/pantry photo(s), type ingredients, or select from a pantry list.
+- **Calorie-aware:** Suggestions within your selected limit (e.g., 200–1200 kcal).
+- **Dietary Customization:** Keto, Vegan, Gluten-Free, Vegetarian, etc.
+- **Global Cuisines:** Italian, Japanese, Mexican, Indian, and more.
+- **Waste Reduction:** Prioritizes using what you already have.  
+- **Developer-friendly:** Returns clean JSON; guardrails enforce allowed ingredients only.
+- **Responsible outputs:** JSON-only model output, calorie bounds, explicit allow-lists
 
 ---
 
