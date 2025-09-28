@@ -1,22 +1,23 @@
 from __future__ import annotations
-
-import base64
-from typing import List, Optional
+from typing import List
+import io, base64
+import json as _json
 
 try:
-    from PIL import Image as PILImage
-    PIL_AVAILABLE = True
+    from PIL import Image as PILImage  # optional
 except Exception:
-    PIL_AVAILABLE = False
+    PILImage = None  # gracefully fall back to inline_data
 
+_PROMPT_JSON = (
+    "Identify edible grocery/food items visible in this photo. "
+    "Return ONLY a JSON array of strings (unique, capitalized common names). "
+    "No commentary."
+)
 
-_PROMPT = """
-Please identify all food ingredients visible in this image.
-Focus only on raw ingredients, produce, and food items.
-Ignore any containers, utensils, packaging, or non-food objects.
-List each ingredient on a separate line. Do not include numbering or bullets.
-""".strip()
-
+_PROMPT_LINES = (
+    "List all visible food ingredients (one per line, no numbers or bullets). "
+    "Ignore packaging/utensils."
+)
 
 def _guess_mime(image_bytes: bytes) -> str:
     """Tiny mime sniffer. Prefer JPEG if unsure."""
@@ -25,7 +26,6 @@ def _guess_mime(image_bytes: bytes) -> str:
     if image_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
         return "image/png"
     return "image/jpeg"
-
 
 def _normalize_lines(text: str) -> List[str]:
     out: List[str] = []
@@ -36,56 +36,88 @@ def _normalize_lines(text: str) -> List[str]:
         low = line.lower()
         if low.startswith(("okay", "here are", "ingredients:", "ingredient list")):
             continue
-
         while line and (line[0] in "-•*0123456789. "):
             line = line[1:].lstrip()
         if line and line not in out:
             out.append(line)
     return out
 
+def _dedup_clamp(items: List[str], max_items: int) -> List[str]:
+    seen, out = set(), []
+    for it in (str(x).strip() for x in items):
+        if it and it not in seen:
+            seen.add(it)
+            out.append(it)
+        if len(out) >= max_items:
+            break
+    return out
 
-def identify_ingredients_from_image(client, image_bytes: bytes) -> List[str]:
+def detect_ingredients(image_path: str, client, max_items: int = 20) -> List[str]:
     """
-    Use Gemini to extract ingredient names from an image.
-    Returns [] if client is None (offline) or on model error.
+    Use Gemini Vision to detect edible grocery/food items in an image.
+    Returns: list[str] of unique, capitalized common names (max max_items).
+    Requires a configured client (see create_client in recipes.py).
     """
-    if not image_bytes:
-        return []
     if client is None:
-        return []
+        raise RuntimeError("Online detection requires GOOGLE_API_KEY. See .env setup.")
 
-    # Pick mime
-    mime = _guess_mime(image_bytes)
-    if PIL_AVAILABLE:
-        try:
-
-            im = PILImage.open(io.BytesIO(image_bytes)) 
-            fmt = (im.format or "").upper()
-            if fmt == "PNG":
-                mime = "image/png"
-            elif fmt == "JPEG" or fmt == "JPG":
-                mime = "image/jpeg"
-        except Exception:
-            pass
-
-    image_part = {
-        "inline_data": {
-            "mime_type": mime,
-            "data": base64.b64encode(image_bytes).decode("utf-8"),
-        }
-    }
-
-    try:
-        resp = client.generate_content(
-            contents=[{"parts": [{"text": _PROMPT}, image_part]}]
-        )
-        return _normalize_lines(resp.text or "")
-    except Exception:
-        return []
-
-
-def identify_ingredients_from_path(client, path: str) -> List[str]:
-    """Convenience: read file and call identify_ingredients_from_image."""
-    with open(path, "rb") as f:
+    with open(image_path, "rb") as f:
         data = f.read()
-    return identify_ingredients_from_image(client, data)
+    mime = _guess_mime(data)
+
+    # Prefer JSON array response for clean parsing
+    try:
+        from google.generativeai.types import GenerationConfig
+        if PILImage:
+            img = PILImage.open(io.BytesIO(data))
+            resp = client.generate_content(
+                [img, {"text": _PROMPT_JSON}],
+                generation_config=GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2,
+                ),
+            )
+        else:
+            image_part = {
+                "inline_data": {
+                    "mime_type": mime,
+                    "data": base64.b64encode(data).decode("utf-8"),
+                }
+            }
+            resp = client.generate_content(
+                [image_part, {"text": _PROMPT_JSON}],
+                generation_config=GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.2,
+                ),
+            )
+
+        try:
+            parsed = _json.loads(resp.text)
+        except Exception:
+            parsed = resp.text
+
+        if isinstance(parsed, list):
+            items = [str(x).strip() for x in parsed if str(x).strip()]
+        elif isinstance(parsed, dict) and "ingredients" in parsed:
+            items = [str(x).strip() for x in parsed["ingredients"] if str(x).strip()]
+        elif isinstance(parsed, str):
+            items = _normalize_lines(parsed)
+        else:
+            items = []
+    except Exception:
+        # Fallback: let the model return plain lines
+        if PILImage:
+            img = PILImage.open(io.BytesIO(data))
+            resp2 = client.generate_content([img, {"text": _PROMPT_LINES}])
+        else:
+            image_part = {
+                "inline_data": {
+                    "mime_type": mime,
+                    "data": base64.b64encode(data).decode("utf-8"),
+                }
+            }
+            resp2 = client.generate_content([image_part, {"text": _PROMPT_LINES}])
+        items = _normalize_lines(getattr(resp2, "text", "") or "")
+
+    return _dedup_clamp(items, max_items)
