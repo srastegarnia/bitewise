@@ -4,7 +4,7 @@ Smart, waste-aware meal planning that respects **calories**, **diets**, **cuisin
 
 [![Demo Video](https://img.shields.io/badge/Watch-Demo-red)](https://youtu.be/Pxk0hzvAGEQ) 
 [![Kaggle Notebook](https://img.shields.io/badge/Open-Kaggle-blue)](https://www.kaggle.com/code/shimarastegar/bitewise)
-[![Blog Post](https://img.shields.io/badge/Read-Blog-green)](https://medium.com/@brastgrants/blitudes-revolutionizing-meal-planning-with-your-sl-kitchen-assistant-fa7672bb6ce9)
+[![Blog Post](https://img.shields.io/badge/Read-Blog-green)](https://medium.com/@srastegarnia/bitewise-revolutionizing-meal-planning-with-your-ai-kitchen-assistant-fa76724b6ce9)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 <div align="center">
